@@ -6,6 +6,7 @@
 // @include     https://www.wanikani.com/*
 // @exclude     https://www.wanikani.com/review/*
 // @exclude     https://www.wanikani.com/lesson/*
+// @updateURL   https://github.com/nibarius/wk-userscripts/raw/master/wk-denial-mode.user.js
 // @run-at      document-end
 // @copyright   2015, Niklas Barsk
 // ==/UserScript==
