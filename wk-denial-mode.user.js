@@ -1,61 +1,76 @@
 // ==UserScript==
 // @name        WaniKani Denial Mode
-// @version     1.0
+// @version     1.1
 // @author Niklas Barsk
-// @description Make the dashboard look like you're level 50 and have burnt everything.
+// @description Make the dashboard look like you're level 60 and have burnt everything.
 // @include     https://www.wanikani.com/*
 // @exclude     https://www.wanikani.com/review/*
 // @exclude     https://www.wanikani.com/lesson/*
 // @updateURL   https://github.com/nibarius/wk-userscripts/raw/master/wk-denial-mode.user.js
 // @run-at      document-end
-// @copyright   2015, Niklas Barsk
+// @copyright   2016, Niklas Barsk
 // ==/UserScript==
 
-
+var numItems = {'radicals': 478, 'kanji': 2027, 'vocab': 6261};
+var maxLevel = "60";
+var maxLevelRadicals = "1";
+var maxLevelKanji = "32";
 var level = document.getElementsByClassName("dropdown-toggle")[0].children[0];
 var lessons = document.getElementsByClassName("lessons")[0].getElementsByTagName("span")[0];
 var reviews = document.getElementsByClassName("reviews")[0].getElementsByTagName("span")[0];
-make(level,  "50");
-make(lessons, "0");
-make(reviews, "0");
 
+runScript();
 
+function runScript() {
 
-if (isDashboard()) {
-    var reviewStatus = document.getElementsByClassName("review-status")[0];
-    var nextHour = reviewStatus.getElementsByClassName("one-hour")[0].children[0];
-    var oneDay = reviewStatus.getElementsByClassName("one-day")[0].children[0];
-    var nextReview = reviewStatus.getElementsByTagName("time")[0];
-    make(nextHour, "0");
-    make(oneDay, "0");
-    make(nextReview, "&#8734;");
+  // When reloading the page the script gets executed before content has been pulled in by the
+  // sites own javascripts. Rerun this script later instead.
+  if (!isPageReady()) {
+    setTimeout(runScript, 10);
+    return;
+  }
 
-    fixSRSLevels("apprentice");
-    fixSRSLevels("guru");
-    fixSRSLevels("master");
-    fixSRSLevels("enlightened");
-    fixSRSLevels("burned");
+  make(level,  maxLevel);
+  make(lessons, "0");
+  make(reviews, "0");
 
-    fixProgression();
+  if (isDashboard()) {
+      var reviewStatus = document.getElementsByClassName("review-status")[0];
+      var nextHour = reviewStatus.getElementsByClassName("one-hour")[0].children[0];
+      var oneDay = reviewStatus.getElementsByClassName("one-day")[0].children[0];
+      var nextReview = reviewStatus.getElementsByTagName("time")[0];
+      make(nextHour, "0");
+      make(oneDay, "0");
+      make(nextReview, "&#8734;");
+
+      fixSRSLevels("apprentice");
+      fixSRSLevels("guru");
+      fixSRSLevels("master");
+      fixSRSLevels("enlightened");
+      fixSRSLevels("burned");
+
+      fixProgression();
+  }
+}
+
+function isPageReady() {
+  return document.getElementById("apprentice").getAttribute("data-content") != null;
 }
 
 function make(elem, what) {
-	elem.innerHTML = what;
+  elem.innerHTML = what;
 }
 
 function fixSRSLevels(which) {
-	var levelElement = document.getElementById(which);
-	var data = levelElement.getAttribute("data-content");
-    var fixedData = replaceInDataContent(which, data);
-	levelElement.setAttribute("data-content", fixedData);
+  var levelElement = document.getElementById(which);
+  var data = levelElement.getAttribute("data-content");
+  var fixedData = replaceInDataContent(which, data);
+  levelElement.setAttribute("data-content", fixedData);
 
     var numberHolder = levelElement.children[0];
-	if (which == "burned") {
-        // 453 radicals
-        // 1680 kanji
-        // 5146 vocabulary
-        make(numberHolder, "7279");
-	}
+  if (which == "burned") {
+        make(numberHolder, "" + (numItems.radicals + numItems.kanji + numItems.vocab));
+  }
     else {
         make(numberHolder, "0");
     }
@@ -77,22 +92,22 @@ function fixProgression() {
     var kanjiProgressBarLabel = kanjiProgressBar.getElementsByTagName("b")[0]
     make(radicalProgressBarLabel, "100%");
     make(kanjiProgressBarLabel, "100%");
-    
+
     var radicalTotal = document.getElementsByClassName("pull-right total")[0];
     var kanjiTotal = document.getElementsByClassName("pull-right total")[1];
-    make(radicalTotal, "3"); // total radials for level 50
-    make(kanjiTotal, "35"); // total kanji for level 50
+    make(radicalTotal, maxLevelRadicals);
+    make(kanjiTotal, maxLevelKanji);
 }
 
 function replaceInProgressString(which) {
-	var splitString = which.innerHTML.split(/([0-9]+)/); //split on each number
+  var splitString = which.innerHTML.split(/([0-9]+)/); //split on each number
     var newString = "";
     for (i = 0; i < splitString.length; i++) {
         if (isNaN(splitString[i])) {
             newString += splitString[i]; // not a number, just use it as it is
         }
         else {
-        	newString += "50";
+          newString += maxLevel;
         }
     }
     make(which, newString);
@@ -102,7 +117,7 @@ function replaceInDataContent(which, data) {
     var splitString = data.split(/([0-9]+)/); //split on each number
     var newData = "";
     var burnCounter = 0;
-    var burnCounts = ["453", "1680", "5146"];
+    var burnCounts = ["" + numItems.radicals, "" + numItems.kanji, "" + numItems.vocab];
     for (i = 0; i < splitString.length; i++) {
         if (isNaN(splitString[i])) {
             newData += splitString[i]; // not a number, just use it as it is
@@ -111,7 +126,7 @@ function replaceInDataContent(which, data) {
             newData += burnCounts[burnCounter++];
         }
         else {
-        	newData += "0";
+          newData += "0";
         }
     }
     return newData;
